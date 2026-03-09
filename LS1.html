@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Songbook</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --accent: #38bdf8; --border: #334155; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        .composer { width: 380px; background: var(--bg); border-right: 2px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; flex-shrink: 0; }
+        .label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+        input, textarea, select { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--border); background: #1e293b; color: white; font-family: inherit; outline: none; box-sizing: border-box; }
+        #i { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; border-color: var(--accent); text-align: center; }
+        
+        .designer-zone { flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+        .canvas-container { background: white; border-radius: 12px; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 250px; }
+        canvas { width: 200px; height: 240px; cursor: crosshair; touch-action: none; background: white; display: block; }
+        
+        .lyric-zone { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
+        textarea { flex-grow: 1; resize: none; line-height: 1.6; font-size: 14px; }
+        
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
+        button { padding: 12px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-add { grid-column: span 2; background: var(--accent); color: #0f172a; font-size: 1.1rem; }
+        .btn-print { background: #10b981; color: white; }
+        .btn-clear { background: #ef4444; color: white; }
+        
+        .preview { flex-grow: 1; background: #334155; padding: 30px; overflow-y: auto; display: flex; justify-content: center; }
+        #sheet { width: 8.5in; min-height: 11in; background: white; color: black; padding: 0.75in; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; }
+        
+        #sheet-title { font-size: 28pt; font-weight: 900; font-variant: small-caps; border-bottom: 3px solid black; padding-bottom: 5px; margin-bottom: 10px; text-align: left; }
+        #sheet-chords { display: flex; flex-wrap: wrap; gap: 12px; row-gap: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 25px; align-content: flex-start; }
+        .chord-thumb { width: 70px; }
+        .chord-thumb img { width: 100%; height: auto; display: block; }
+        #sheet-lyrics { white-space: pre-wrap; font-size: 12pt; line-height: 1.7; font-family: 'Georgia', serif; color: #1e293b; }
+
+        @media print {
+            /* This removes browser headers/footers (date, title, etc) */
+            @page { margin: 0; }
+            body { background: white; padding: 0; margin: 0; display: block; overflow: visible; }
+            .composer { display: none !important; }
+            .preview { padding: 0; background: white; overflow: visible; display: block; }
+            #sheet { 
+                width: 100%; 
+                box-shadow: none; 
+                padding: 0.75in; /* Keep the content away from paper edges */
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="composer">
+        <div class="designer-zone">
+            <div class="label">1. Designer</div>
+            <div class="canvas-container"><canvas id="c"></canvas></div>
+            <input type="text" id="manual-name" placeholder="Chord Name...">
+            <select id="alt" onchange="applyAlt(this.value)"></select>
+            <div class="label">Fingering</div>
+            <input type="text" id="i" value="x 3 2 0 3 0">
+            <button class="btn-add" onclick="addToSheet()">+ Add to Sheet</button>
+        </div>
+
+        <div class="lyric-zone">
+            <div class="label">Song Title</div>
+            <input type="text" id="song-title-input" placeholder="Enter title..." oninput="updateTitle(this.value)">
+            <div class="label">2. Lyrics</div>
+            <textarea id="lyric-input" placeholder="Type lyrics here..." oninput="updateLyrics(this.value)"></textarea>
+            <div class="btn-group">
+                <button class="btn-clear" onclick="clearSheet()">Clear All</button>
+                <button class="btn-print" onclick="window.print()">Print PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview">
+        <div id="sheet">
+            <div id="sheet-title">New Song</div>
+            <div id="sheet-chords"></div>
+            <div id="sheet-lyrics">...</div>
+        </div>
+    </div>
+
+<script>
+    const iI = document.getElementById('i'), alt = document.getElementById('alt'), 
+          mN = document.getElementById('manual-name'),
+          cvs = document.getElementById('c'), ctx = cvs.getContext('2d'),
+          sheetChords = document.getElementById('sheet-chords'),
+          sheetLyrics = document.getElementById('sheet-lyrics'),
+          sheetTitle = document.getElementById('sheet-title');
+
+    const ratio = 3; cvs.width = 200 * ratio; cvs.height = 240 * ratio; ctx.scale(ratio, ratio);
+    let currentFrets = ["x", "3", "2", "0", "3", "0"];
+    const TUNING = [4, 9, 2, 7, 11, 4];
+    const N_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+    const N_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const FORMULAS = [{name:"13",ivs:[0,4,7,10,2,9]},{name:"maj13",ivs:[0,4,7,11,2,9]},{name:"7b9",ivs:[0,4,10,1]},{name:"7#9",ivs:[0,4,10,3]},{name:"maj9",ivs:[0,4,7,11,2]},{name:"m9",ivs:[0,3,7,10,2]},{name:"maj7",ivs:[0,4,7,11]},{name:"7",ivs:[0,4,7,10]},{name:"m7",ivs:[0,3,7,10]},{name:"6/9",ivs:[0,4,7,9,2]},{name:"add9",ivs:[0,4,7,2]},{name:"6",ivs:[0,4,7,9]},{name:"m6",ivs:[0,3,7,9]},{name:"sus4",ivs:[0,5,7]},{name:"sus2",ivs:[0,2,7]},{name:"",ivs:[0,4,7]},{name:"m",ivs:[0,3,7]}];
+
+    function solve() {
+        let notes = [], bass = -1;
+        currentFrets.forEach((f, i) => { if (f !== 'x') { let v = (TUNING[i] + parseInt(f)) % 12; if (!notes.includes(v)) notes.push(v); if (bass === -1) bass = v; } });
+        if (notes.length === 0) return [];
+        let matches = [];
+        for (let r = 0; r < 12; r++) {
+            let ivs = notes.map(n => (n - r + 12) % 12);
+            for (let f of FORMULAS) {
+                if (!ivs.every(v => f.ivs.includes(v))) continue;
+                const essential = f.ivs.filter(v => v!==7 && !(ivs.includes(10)||ivs.includes(11)||ivs.includes(9)) && (v===3||v===4));
+                if (essential.every(v => ivs.includes(v))) {
+                    let label = ([1, 2, 4, 6, 7, 9, 11].includes(r) ? N_SHARP[r] : N_FLAT[r]) + f.name;
+                    matches.push({ label, score: f.ivs.length * 20 + (r === bass ? 50 : 0) });
+                }
+            }
+        }
+        return matches.sort((a, b) => b.score - a.score);
+    }
+
+    function render(targetCtx, weight = '800', gridCol = '#ccc') {
+        const x0 = 35, y0 = 35, w = 130, h = 150, gX = w/5, gY = h/5;
+        targetCtx.fillStyle = 'white'; targetCtx.fillRect(0, 0, 200, 240);
+        const num = currentFrets.map(f => f === 'x' ? -1 : parseInt(f));
+        const start = (Math.max(...num) > 5) ? Math.min(...num.filter(f => f > 0)) : 1;
+        targetCtx.strokeStyle = gridCol; targetCtx.lineWidth = 1.2;
+        for(let i=0; i<6; i++) { targetCtx.beginPath(); targetCtx.moveTo(x0+i*gX, y0); targetCtx.lineTo(x0+i*gX, y0+h); targetCtx.stroke(); }
+        for(let j=0; j<=5; j++) { targetCtx.beginPath(); targetCtx.moveTo(x0, y0+j*gY); targetCtx.lineTo(x0+w, y0+j*gY); targetCtx.stroke(); }
+        if(start === 1) { targetCtx.strokeStyle = 'black'; targetCtx.lineWidth = 5; targetCtx.beginPath(); targetCtx.moveTo(x0, y0); targetCtx.lineTo(x0+w, y0); targetCtx.stroke(); }
+        else { targetCtx.fillStyle = '#222'; targetCtx.font = 'bold 16px sans-serif'; targetCtx.textAlign = 'right'; targetCtx.fillText(start + 'fr', x0 - 8, y0 + 18); }
+        currentFrets.forEach((f, k) => {
+            let x = x0 + k*gX;
+            if(f === 'x') { targetCtx.fillStyle = '#999'; targetCtx.font = '22px sans-serif'; targetCtx.fillText('×', x, y0 - 8); }
+            else if(f === '0') { targetCtx.strokeStyle = 'black'; targetCtx.lineWidth = 2.5; targetCtx.beginPath(); targetCtx.arc(x, y0 - 14, 6, 0, 7); targetCtx.stroke(); }
+            else { let rel = parseInt(f)-start+1; targetCtx.fillStyle = 'black'; targetCtx.beginPath(); targetCtx.arc(x, y0+(rel*gY)-(gY/2), 12, 0, 7); targetCtx.fill(); }
+        });
+        targetCtx.fillStyle = 'black'; targetCtx.font = weight + ' 26px sans-serif'; targetCtx.textAlign = 'center'; targetCtx.fillText(mN.value, 100, 220);
+    }
+
+    function refreshDesigner() {
+        const res = solve();
+        if (!mN.dataset.manual) {
+            alt.innerHTML = "";
+            if (res.length > 0) {
+                let seen = new Set();
+                res.filter(r => !seen.has(r.label) && seen.add(r.label)).forEach(r => {
+                    let o = document.createElement('option'); o.value = r.label; o.innerText = r.label; alt.appendChild(o);
+                });
+                mN.value = res[0].label;
+            } else mN.value = "?";
+        }
+        render(ctx, '800', '#ccc');
+    }
+
+    function updateTitle(v) { sheetTitle.innerText = v || "New Song"; }
+    function updateLyrics(v) { sheetLyrics.innerText = v || "..."; }
+    function applyAlt(v) { mN.value = v; delete mN.dataset.manual; render(ctx, '800', '#ccc'); }
+    mN.oninput = () => { mN.dataset.manual = "true"; render(ctx, '800', '#ccc'); };
+    
+    function addToSheet() {
+        const off = document.createElement('canvas'); off.width = 600; off.height = 720;
+        const octx = off.getContext('2d'); octx.scale(3, 3);
+        render(octx, '600', '#bbb');
+        const thumb = document.createElement('div'); thumb.className = 'chord-thumb';
+        thumb.innerHTML = `<img src="${off.toDataURL()}">`;
+        thumb.onclick = () => thumb.remove();
+        sheetChords.appendChild(thumb);
+    }
+    
+    function clearSheet() { 
+        sheetChords.innerHTML = ""; sheetLyrics.innerText = "..."; sheetTitle.innerText = "New Song"; 
+        document.getElementById('lyric-input').value = ""; document.getElementById('song-title-input').value = "";
+        delete mN.dataset.manual; refreshDesigner();
+    }
+
+    iI.oninput = () => { delete mN.dataset.manual; let val = iI.value.trim().split(/\s+/); if (val.length === 6) { currentFrets = val; refreshDesigner(); } };
+    cvs.onclick = (e) => {
+        delete mN.dataset.manual;
+        const rect = cvs.getBoundingClientRect();
+        const mX = (e.clientX - rect.left) * (200 / rect.width), mY = (e.clientY - rect.top) * (240 / rect.height);
+        const x0 = 35, y0 = 35, gX = 130/5, gY = 150/5;
+        let sIdx = Math.round((mX - x0) / gX);
+        if (sIdx < 0 || sIdx > 5) return;
+        if (mY < y0) currentFrets[sIdx] = (currentFrets[sIdx] === '0') ? 'x' : '0';
+        else {
+            let fIdx = Math.ceil((mY - y0) / gY);
+            if (fIdx >= 1 && fIdx <= 5) {
+                const num = currentFrets.map(f => f === 'x' ? -1 : parseInt(f));
+                const start = (Math.max(...num) > 5) ? Math.min(...num.filter(f => f > 0)) : 1;
+                let actual = (start > 1) ? (fIdx + start - 1) : fIdx;
+                currentFrets[sIdx] = (currentFrets[sIdx] == actual) ? 'x' : actual.toString();
+            }
+        }
+        iI.value = currentFrets.join(" "); refreshDesigner();
+    };
+
+    window.onload = refreshDesigner;
+</script>
+</body>
+</html>
