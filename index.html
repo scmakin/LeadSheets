@@ -2,79 +2,59 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Songbook</title>
+    <title>Songbook CF7.6 - Alt Fixed</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --accent: #38bdf8; --border: #334155; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        .composer { width: 380px; background: var(--bg); border-right: 2px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; flex-shrink: 0; }
-        .label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
-        input, textarea, select { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--border); background: #1e293b; color: white; font-family: inherit; outline: none; box-sizing: border-box; }
-        #i { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; border-color: var(--accent); text-align: center; }
-        
-        .designer-zone { flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
-        .canvas-container { background: white; border-radius: 12px; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 250px; }
-        canvas { width: 200px; height: 240px; cursor: crosshair; touch-action: none; background: white; display: block; }
-        
-        .lyric-zone { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
-        textarea { flex-grow: 1; resize: none; line-height: 1.6; font-size: 14px; }
-        
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
-        button { padding: 12px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-add { grid-column: span 2; background: var(--accent); color: #0f172a; font-size: 1.1rem; }
-        .btn-print { background: #10b981; color: white; }
-        .btn-clear { background: #ef4444; color: white; }
-        
-        .preview { flex-grow: 1; background: #334155; padding: 30px; overflow-y: auto; display: flex; justify-content: center; }
-        #sheet { width: 8.5in; min-height: 11in; background: white; color: black; padding: 0.75in; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; }
-        
-        #sheet-title { font-size: 28pt; font-weight: 900; font-variant: small-caps; border-bottom: 3px solid black; padding-bottom: 5px; margin-bottom: 10px; text-align: left; }
-        #sheet-chords { display: flex; flex-wrap: wrap; gap: 12px; row-gap: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 25px; align-content: flex-start; }
-        .chord-thumb { width: 70px; }
-        .chord-thumb img { width: 100%; height: auto; display: block; }
-        #sheet-lyrics { white-space: pre-wrap; font-size: 12pt; line-height: 1.7; font-family: 'Georgia', serif; color: #1e293b; }
-
-        @media print {
-            /* This removes browser headers/footers (date, title, etc) */
-            @page { margin: 0; }
-            body { background: white; padding: 0; margin: 0; display: block; overflow: visible; }
-            .composer { display: none !important; }
-            .preview { padding: 0; background: white; overflow: visible; display: block; }
-            #sheet { 
-                width: 100%; 
-                box-shadow: none; 
-                padding: 0.75in; /* Keep the content away from paper edges */
-                border: none;
-            }
-        }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 380px; min-width: 380px; flex-shrink: 0; background: var(--bg); border-right: 2px solid var(--border); display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .designer-container { background: var(--card); padding: 15px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border); flex-shrink: 0; }
+        .canvas-bg { background: white; border-radius: 8px; padding: 10px; display: flex; justify-content: center; margin-bottom: 10px; }
+        canvas { background: white; cursor: crosshair; touch-action: none; width: 200px; height: 240px; display: block; }
+        .label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin: 12px 0 6px 0; }
+        input, textarea, select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--border); background: #1e293b; color: white; box-sizing: border-box; font-family: inherit; font-size: 14px; }
+        #i { font-family: monospace; font-size: 1.1rem; text-align: center; border-color: var(--accent); color: var(--accent); background: #0f172a; }
+        textarea { min-height: 350px; resize: vertical; line-height: 1.6; margin-bottom: 20px; background: #0f172a; }
+        .btn-add { background: var(--accent); color: #0f172a; font-weight: 800; padding: 16px; border: none; border-radius: 12px; cursor: pointer; width: 100%; margin-bottom: 12px; font-size: 16px; transition: 0.2s; position: sticky; bottom: 0; }
+        .btn-add:hover { background: #7dd3fc; transform: translateY(-1px); }
+        .btn-group { display: flex; gap: 8px; margin-bottom: 20px; }
+        .btn-sub { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; font-size: 12px; }
+        .btn-clear { background: #ef4444; }
+        .btn-print { background: #10b981; }
+        .preview-pane { flex-grow: 1; background: #334155; padding: 40px; overflow-y: auto; display: flex; justify-content: center; }
+        #sheet { width: 8.5in; min-height: 11in; background: white; color: black; padding: 0.75in; box-shadow: 0 20px 50px rgba(0,0,0,0.4); box-sizing: border-box; }
+        #sheet-title { font-size: 30pt; font-weight: 900; border-bottom: 4px solid black; margin-bottom: 20px; font-variant: small-caps; }
+        #sheet-chords { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; min-height: 50px; }
+        .chord-img { width: 85px; cursor: pointer; transition: transform 0.1s; }
+        .chord-img:hover { transform: scale(1.1); }
+        #sheet-lyrics { white-space: pre-wrap; font-family: 'Georgia', serif; font-size: 13pt; line-height: 1.8; }
+        @media print { .sidebar { display: none !important; } .preview-pane { padding: 0; background: white; display: block; } #sheet { box-shadow: none; width: 100%; margin: 0; } }
     </style>
 </head>
 <body>
 
-    <div class="composer">
-        <div class="designer-zone">
+    <div class="sidebar">
+        <div class="designer-container">
             <div class="label">1. Designer</div>
-            <div class="canvas-container"><canvas id="c"></canvas></div>
-            <input type="text" id="manual-name" placeholder="Chord Name...">
-            <select id="alt" onchange="applyAlt(this.value)"></select>
-            <div class="label">Fingering</div>
-            <input type="text" id="i" value="x 3 2 0 3 0">
-            <button class="btn-add" onclick="addToSheet()">+ Add to Sheet</button>
-        </div>
-
-        <div class="lyric-zone">
-            <div class="label">Song Title</div>
-            <input type="text" id="song-title-input" placeholder="Enter title..." oninput="updateTitle(this.value)">
-            <div class="label">2. Lyrics</div>
-            <textarea id="lyric-input" placeholder="Type lyrics here..." oninput="updateLyrics(this.value)"></textarea>
-            <div class="btn-group">
-                <button class="btn-clear" onclick="clearSheet()">Clear All</button>
-                <button class="btn-print" onclick="window.print()">Print PDF</button>
+            <div class="canvas-bg"><canvas id="c"></canvas></div>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="manual-name" placeholder="Chord Name...">
+                <select id="alt" onchange="applyAlt(this.value)" style="width: 120px; flex-shrink: 0;"></select>
             </div>
+            <div class="label">Fingering</div>
+            <input type="text" id="i" value="x 3 2 0 1 0" spellcheck="false">
+        </div>
+        <div class="label">Song Title</div>
+        <input type="text" id="song-title-input" placeholder="Untitled Song" oninput="updateTitle(this.value)" style="margin-bottom: 10px;">
+        <div class="label">2. Lyrics & Cues</div>
+        <textarea id="lyric-input" placeholder="Paste lyrics here..." oninput="updateLyrics(this.value)"></textarea>
+        <button class="btn-add" onclick="addToSheet()">+ Add Chord to Sheet</button>
+        <div class="btn-group">
+            <button class="btn-sub btn-clear" onclick="clearSheet()">Clear All</button>
+            <button class="btn-sub btn-print" onclick="window.print()">Save as PDF</button>
         </div>
     </div>
 
-    <div class="preview">
+    <div class="preview-pane">
         <div id="sheet">
             <div id="sheet-title">New Song</div>
             <div id="sheet-chords"></div>
@@ -83,19 +63,36 @@
     </div>
 
 <script>
-    const iI = document.getElementById('i'), alt = document.getElementById('alt'), 
-          mN = document.getElementById('manual-name'),
-          cvs = document.getElementById('c'), ctx = cvs.getContext('2d'),
-          sheetChords = document.getElementById('sheet-chords'),
-          sheetLyrics = document.getElementById('sheet-lyrics'),
-          sheetTitle = document.getElementById('sheet-title');
-
-    const ratio = 3; cvs.width = 200 * ratio; cvs.height = 240 * ratio; ctx.scale(ratio, ratio);
-    let currentFrets = ["x", "3", "2", "0", "3", "0"];
+    const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
+    const iI = document.getElementById('i'), alt = document.getElementById('alt'), mN = document.getElementById('manual-name');
+    const sheetChords = document.getElementById('sheet-chords'), sheetLyrics = document.getElementById('sheet-lyrics'), sheetTitle = document.getElementById('sheet-title');
+    const ratio = 2; cvs.width = 200 * ratio; cvs.height = 240 * ratio; ctx.scale(ratio, ratio);
+    
+    let currentFrets = ["x", "3", "2", "0", "1", "0"];
+    let lockedName = null;
     const TUNING = [4, 9, 2, 7, 11, 4];
     const N_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
     const N_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const FORMULAS = [{name:"13",ivs:[0,4,7,10,2,9]},{name:"maj13",ivs:[0,4,7,11,2,9]},{name:"7b9",ivs:[0,4,10,1]},{name:"7#9",ivs:[0,4,10,3]},{name:"maj9",ivs:[0,4,7,11,2]},{name:"m9",ivs:[0,3,7,10,2]},{name:"maj7",ivs:[0,4,7,11]},{name:"7",ivs:[0,4,7,10]},{name:"m7",ivs:[0,3,7,10]},{name:"6/9",ivs:[0,4,7,9,2]},{name:"add9",ivs:[0,4,7,2]},{name:"6",ivs:[0,4,7,9]},{name:"m6",ivs:[0,3,7,9]},{name:"sus4",ivs:[0,5,7]},{name:"sus2",ivs:[0,2,7]},{name:"",ivs:[0,4,7]},{name:"m",ivs:[0,3,7]}];
+
+    const FORMULAS = [
+        { name: "maj7(#11)", ivs: [0, 4, 7, 11, 6] }, { name: "7(#11)", ivs: [0, 4, 7, 10, 6] },
+        { name: "9(#11)", ivs: [0, 4, 10, 2, 6] }, { name: "7(b13)", ivs: [0, 4, 7, 10, 8] }, 
+        { name: "7(#5)", ivs: [0, 4, 8, 10] }, { name: "13", ivs: [0, 4, 7, 10, 2, 9] }, 
+        { name: "maj13", ivs: [0, 4, 7, 11, 2, 9] }, { name: "7b9", ivs: [0, 4, 10, 1] }, 
+        { name: "7#9", ivs: [0, 4, 10, 3] }, { name: "maj9", ivs: [0, 4, 7, 11, 2] }, 
+        { name: "m9", ivs: [0, 3, 7, 10, 2] }, { name: "add9", ivs: [0, 4, 7, 2] }, 
+        { name: "m(add9)", ivs: [0, 3, 7, 2] }, { name: "6/9", ivs: [0, 4, 7, 9, 2] },
+        { name: "maj7sus4", ivs: [0, 5, 7, 11] }, { name: "7sus4", ivs: [0, 5, 7, 10] },
+        { name: "m7(b13)", ivs: [0, 3, 7, 10, 8] }, { name: "ø7", ivs: [0, 3, 6, 10] }, 
+        { name: "°7", ivs: [0, 3, 6, 9] }, { name: "m(maj7)", ivs: [0, 3, 7, 11] }, 
+        { name: "9", ivs: [0, 4, 10, 2] }, { name: "7(b5)", ivs: [0, 4, 10, 6] }, 
+        { name: "maj7", ivs: [0, 4, 7, 11] }, { name: "7", ivs: [0, 4, 7, 10] }, 
+        { name: "m7", ivs: [0, 3, 7, 10] }, { name: "6", ivs: [0, 4, 7, 9] }, 
+        { name: "m6", ivs: [0, 3, 7, 9] }, { name: "sus4", ivs: [0, 5, 7] }, 
+        { name: "sus2", ivs: [0, 2, 7] }, { name: "", ivs: [0, 4, 7] }, { name: "m", ivs: [0, 3, 7] }
+    ];
+
+    function getNoteName(val, rootVal) { return [1, 2, 4, 6, 7, 9, 11].includes(rootVal) ? N_SHARP[val] : N_FLAT[val]; }
 
     function solve() {
         let notes = [], bass = -1;
@@ -105,75 +102,92 @@
         for (let r = 0; r < 12; r++) {
             let ivs = notes.map(n => (n - r + 12) % 12);
             for (let f of FORMULAS) {
-                if (!ivs.every(v => f.ivs.includes(v))) continue;
-                const essential = f.ivs.filter(v => v!==7 && !(ivs.includes(10)||ivs.includes(11)||ivs.includes(9)) && (v===3||v===4));
+                const noWrong = ivs.every(v => f.ivs.includes(v) || (v === 7 && (f.name.includes("13") || f.name.includes("#"))));
+                if (!noWrong) continue;
+                const shell = (ivs.includes(10) || ivs.includes(11) || ivs.includes(9)) && [1,2,3,6,8].some(v => ivs.includes(v));
+                const essential = f.ivs.filter(v => v!==7 && !( (notes.length>=5 || shell) && (v===3||v===4) ) && !(f.name.includes("13") && v===2));
                 if (essential.every(v => ivs.includes(v))) {
-                    let label = ([1, 2, 4, 6, 7, 9, 11].includes(r) ? N_SHARP[r] : N_FLAT[r]) + f.name;
-                    matches.push({ label, score: f.ivs.length * 20 + (r === bass ? 50 : 0) });
+                    let label = getNoteName(r, r) + f.name;
+                    if (!ivs.includes(3) && !ivs.includes(4) && !f.name.includes("sus") && f.name !== "") label += "(no3)";
+                    if (bass !== r && bass !== -1) label += "/" + getNoteName(bass, r);
+                    let score = f.ivs.length * 20 + (r === bass ? 100 : 40) - (label.length * 2);
+                    matches.push({ label, score });
                 }
             }
         }
         return matches.sort((a, b) => b.score - a.score);
     }
 
-    function render(targetCtx, weight = '800', gridCol = '#ccc') {
+    function render(tCtx) {
+        tCtx.fillStyle = 'white'; tCtx.fillRect(0, 0, 200, 240);
         const x0 = 35, y0 = 35, w = 130, h = 150, gX = w/5, gY = h/5;
-        targetCtx.fillStyle = 'white'; targetCtx.fillRect(0, 0, 200, 240);
         const num = currentFrets.map(f => f === 'x' ? -1 : parseInt(f));
         const start = (Math.max(...num) > 5) ? Math.min(...num.filter(f => f > 0)) : 1;
-        targetCtx.strokeStyle = gridCol; targetCtx.lineWidth = 1.2;
-        for(let i=0; i<6; i++) { targetCtx.beginPath(); targetCtx.moveTo(x0+i*gX, y0); targetCtx.lineTo(x0+i*gX, y0+h); targetCtx.stroke(); }
-        for(let j=0; j<=5; j++) { targetCtx.beginPath(); targetCtx.moveTo(x0, y0+j*gY); targetCtx.lineTo(x0+w, y0+j*gY); targetCtx.stroke(); }
-        if(start === 1) { targetCtx.strokeStyle = 'black'; targetCtx.lineWidth = 5; targetCtx.beginPath(); targetCtx.moveTo(x0, y0); targetCtx.lineTo(x0+w, y0); targetCtx.stroke(); }
-        else { targetCtx.fillStyle = '#222'; targetCtx.font = 'bold 16px sans-serif'; targetCtx.textAlign = 'right'; targetCtx.fillText(start + 'fr', x0 - 8, y0 + 18); }
+        tCtx.strokeStyle = '#ddd'; tCtx.lineWidth = 1;
+        for(let i=0; i<6; i++) { tCtx.beginPath(); tCtx.moveTo(x0+i*gX, y0); tCtx.lineTo(x0+i*gX, y0+h); tCtx.stroke(); }
+        for(let j=0; j<=5; j++) { tCtx.beginPath(); tCtx.moveTo(x0, y0+j*gY); tCtx.lineTo(x0+w, y0+j*gY); tCtx.stroke(); }
+        if(start === 1) { tCtx.strokeStyle = 'black'; tCtx.lineWidth = 4; tCtx.beginPath(); tCtx.moveTo(x0, y0); tCtx.lineTo(x0+w, y0); tCtx.stroke(); }
+        else { tCtx.fillStyle = '#64748b'; tCtx.font = 'bold 12px sans-serif'; tCtx.textAlign = 'right'; tCtx.fillText(start + 'fr', x0 - 10, y0 + 15); }
         currentFrets.forEach((f, k) => {
             let x = x0 + k*gX;
-            if(f === 'x') { targetCtx.fillStyle = '#999'; targetCtx.font = '22px sans-serif'; targetCtx.fillText('×', x, y0 - 8); }
-            else if(f === '0') { targetCtx.strokeStyle = 'black'; targetCtx.lineWidth = 2.5; targetCtx.beginPath(); targetCtx.arc(x, y0 - 14, 6, 0, 7); targetCtx.stroke(); }
-            else { let rel = parseInt(f)-start+1; targetCtx.fillStyle = 'black'; targetCtx.beginPath(); targetCtx.arc(x, y0+(rel*gY)-(gY/2), 12, 0, 7); targetCtx.fill(); }
+            if(f === 'x') { tCtx.fillStyle = '#cbd5e1'; tCtx.font = '18px Arial'; tCtx.textAlign='center'; tCtx.fillText('×', x, y0-8); }
+            else if(f === '0') { tCtx.strokeStyle = 'black'; tCtx.lineWidth = 2; tCtx.beginPath(); tCtx.arc(x, y0-12, 5, 0, 7); tCtx.stroke(); }
+            else { let rel = parseInt(f)-start+1; tCtx.fillStyle = 'black'; tCtx.beginPath(); tCtx.arc(x, y0+(rel*gY)-(gY/2), 10, 0, 7); tCtx.fill(); }
         });
-        targetCtx.fillStyle = 'black'; targetCtx.font = weight + ' 26px sans-serif'; targetCtx.textAlign = 'center'; targetCtx.fillText(mN.value, 100, 220);
+        tCtx.fillStyle = 'black'; tCtx.font = 'bold 22px Arial'; tCtx.textAlign = 'center'; tCtx.fillText(mN.value, 100, 220);
     }
 
-    function refreshDesigner() {
+    function refresh() {
         const res = solve();
-        if (!mN.dataset.manual) {
-            alt.innerHTML = "";
-            if (res.length > 0) {
-                let seen = new Set();
-                res.filter(r => !seen.has(r.label) && seen.add(r.label)).forEach(r => {
-                    let o = document.createElement('option'); o.value = r.label; o.innerText = r.label; alt.appendChild(o);
-                });
-                mN.value = res[0].label;
-            } else mN.value = "?";
+        alt.innerHTML = "";
+        let engineSuggested = "?";
+        
+        if (res.length > 0) {
+            let seen = new Set();
+            res.forEach(r => { 
+                if (!seen.has(r.label)) {
+                    seen.add(r.label);
+                    let o = document.createElement('option');
+                    o.value = r.label;
+                    o.innerText = r.label;
+                    if (lockedName === r.label) o.selected = true;
+                    alt.appendChild(o);
+                }
+            });
+            engineSuggested = alt.options[0].value;
+        } else {
+            let o = document.createElement('option');
+            o.value = "?";
+            o.innerText = "Unknown";
+            alt.appendChild(o);
         }
-        render(ctx, '800', '#ccc');
+        
+        if (!mN.dataset.manual) mN.value = lockedName || engineSuggested;
+        render(ctx);
     }
 
     function updateTitle(v) { sheetTitle.innerText = v || "New Song"; }
     function updateLyrics(v) { sheetLyrics.innerText = v || "..."; }
-    function applyAlt(v) { mN.value = v; delete mN.dataset.manual; render(ctx, '800', '#ccc'); }
-    mN.oninput = () => { mN.dataset.manual = "true"; render(ctx, '800', '#ccc'); };
-    
+    function applyAlt(v) { if(v === "?") return; delete mN.dataset.manual; lockedName = v; refresh(); }
+    mN.oninput = () => { mN.dataset.manual = "true"; render(ctx); };
+
     function addToSheet() {
-        const off = document.createElement('canvas'); off.width = 600; off.height = 720;
-        const octx = off.getContext('2d'); octx.scale(3, 3);
-        render(octx, '600', '#bbb');
-        const thumb = document.createElement('div'); thumb.className = 'chord-thumb';
-        thumb.innerHTML = `<img src="${off.toDataURL()}">`;
-        thumb.onclick = () => thumb.remove();
-        sheetChords.appendChild(thumb);
-    }
-    
-    function clearSheet() { 
-        sheetChords.innerHTML = ""; sheetLyrics.innerText = "..."; sheetTitle.innerText = "New Song"; 
-        document.getElementById('lyric-input').value = ""; document.getElementById('song-title-input').value = "";
-        delete mN.dataset.manual; refreshDesigner();
+        const off = document.createElement('canvas'); off.width = 400; off.height = 480;
+        const octx = off.getContext('2d'); octx.scale(2, 2);
+        render(octx);
+        const img = new Image(); img.src = off.toDataURL(); img.className = 'chord-img';
+        img.onclick = () => img.remove();
+        sheetChords.appendChild(img);
     }
 
-    iI.oninput = () => { delete mN.dataset.manual; let val = iI.value.trim().split(/\s+/); if (val.length === 6) { currentFrets = val; refreshDesigner(); } };
+    function clearSheet() {
+        sheetChords.innerHTML = ""; sheetLyrics.innerText = "..."; 
+        document.getElementById('lyric-input').value = ""; document.getElementById('song-title-input').value = "";
+        delete mN.dataset.manual; lockedName = null; refresh();
+    }
+
     cvs.onclick = (e) => {
-        delete mN.dataset.manual;
+        delete mN.dataset.manual; lockedName = null;
         const rect = cvs.getBoundingClientRect();
         const mX = (e.clientX - rect.left) * (200 / rect.width), mY = (e.clientY - rect.top) * (240 / rect.height);
         const x0 = 35, y0 = 35, gX = 130/5, gY = 150/5;
@@ -189,10 +203,11 @@
                 currentFrets[sIdx] = (currentFrets[sIdx] == actual) ? 'x' : actual.toString();
             }
         }
-        iI.value = currentFrets.join(" "); refreshDesigner();
+        iI.value = currentFrets.join(" "); refresh();
     };
 
-    window.onload = refreshDesigner;
+    iI.oninput = () => { let v = iI.value.trim().split(/\s+/); if(v.length===6){ currentFrets=v; delete mN.dataset.manual; lockedName=null; refresh(); }};
+    window.onload = refresh;
 </script>
 </body>
 </html>
