@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Songbook CF7.6 - Alt Fixed</title>
+    <title>Songbook CF7.9</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --accent: #38bdf8; --border: #334155; }
         body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
@@ -27,7 +27,14 @@
         .chord-img { width: 85px; cursor: pointer; transition: transform 0.1s; }
         .chord-img:hover { transform: scale(1.1); }
         #sheet-lyrics { white-space: pre-wrap; font-family: 'Georgia', serif; font-size: 13pt; line-height: 1.8; }
-        @media print { .sidebar { display: none !important; } .preview-pane { padding: 0; background: white; display: block; } #sheet { box-shadow: none; width: 100%; margin: 0; } }
+
+        @media print { 
+            @page { margin: 0.5in; }
+            body, .preview-pane { overflow: hidden !important; height: auto !important; display: block !important; }
+            .sidebar { display: none !important; } 
+            .preview-pane { padding: 0; background: white; } 
+            #sheet { box-shadow: none; width: 100%; margin: 0; border: none; padding: 0; } 
+        }
     </style>
 </head>
 <body>
@@ -141,27 +148,22 @@
         const res = solve();
         alt.innerHTML = "";
         let engineSuggested = "?";
-        
         if (res.length > 0) {
             let seen = new Set();
             res.forEach(r => { 
                 if (!seen.has(r.label)) {
                     seen.add(r.label);
                     let o = document.createElement('option');
-                    o.value = r.label;
-                    o.innerText = r.label;
+                    o.value = r.label; o.innerText = r.label;
                     if (lockedName === r.label) o.selected = true;
                     alt.appendChild(o);
                 }
             });
             engineSuggested = alt.options[0].value;
         } else {
-            let o = document.createElement('option');
-            o.value = "?";
-            o.innerText = "Unknown";
+            let o = document.createElement('option'); o.value = "?"; o.innerText = "Unknown";
             alt.appendChild(o);
         }
-        
         if (!mN.dataset.manual) mN.value = lockedName || engineSuggested;
         render(ctx);
     }
